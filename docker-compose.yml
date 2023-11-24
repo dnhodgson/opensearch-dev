@@ -1,0 +1,193 @@
+version: '3'
+services:
+  opensearch-node1:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: opensearch-node1
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - network.host=0.0.0.0
+      - discovery.seed_hosts=opensearch-node1,opensearch-node2,opensearch-node3
+      - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2,opensearch-node3
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+    volumes:
+      - opensearch-data1:/usr/share/opensearch/data
+      - ./opensearch/certs/root-ca.pem:/usr/share/opensearch/config/root-ca.pem
+      - ./opensearch/certs/admin.pem:/usr/share/opensearch/config/admin.pem
+      - ./opensearch/certs/admin.key:/usr/share/opensearch/config/admin.key
+      - ./opensearch/certs/node1.pem:/usr/share/opensearch/config/node.pem
+      - ./opensearch/certs/node1.key:/usr/share/opensearch/config/node.key
+#      - ./opensearch/certs/cacerts:/usr/share/opensearch/jdk/lib/security/cacerts
+      - ./opensearch/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+    ports:
+      - 9200:9200
+      - 9600:9600
+    networks:
+      - opensearch-net
+  opensearch-node2:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: opensearch-node2
+    environment:
+      - cluster.name=opensearch-cluster # Name the cluster
+      - node.name=opensearch-node2 # Name the node that will run in this container
+      - network.host=0.0.0.0
+      - discovery.seed_hosts=opensearch-node1,opensearch-node2,opensearch-node3 # Nodes to look for when discovering the cluster
+      - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2,opensearch-node3 # Nodes eligibile to serve as cluster manager
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # Set min and max JVM heap sizes to at least 50% of system RAM
+      - "DISABLE_INSTALL_DEMO_CONFIG=true" # Prevents execution of bundled demo script which installs demo certificates and security configurations to OpenSearch
+    volumes:
+      - opensearch-data2:/usr/share/opensearch/data
+      - ./opensearch/certs/root-ca.pem:/usr/share/opensearch/config/root-ca.pem
+      - ./opensearch/certs/admin.pem:/usr/share/opensearch/config/admin.pem
+      - ./opensearch/certs/admin.key:/usr/share/opensearch/config/admin.key
+      - ./opensearch/certs/node2.pem:/usr/share/opensearch/config/node.pem
+      - ./opensearch/certs/node2.key:/usr/share/opensearch/config/node.key
+#      - ./opensearch/certs/cacerts:/usr/share/opensearch/jdk/lib/security/cacerts
+      - ./opensearch/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+    networks:
+      - opensearch-net # All of the containers will join the same Docker bridge network
+  opensearch-node3:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: opensearch-node3
+    environment:
+      - cluster.name=opensearch-cluster # Name the cluster
+      - node.name=opensearch-node3 # Name the node that will run in this container
+      - network.host=0.0.0.0
+      - discovery.seed_hosts=opensearch-node1,opensearch-node2,opensearch-node3 # Nodes to look for when discovering the cluster
+      - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2,opensearch-node3 # Nodes eligibile to serve as cluster manager
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # Set min and max JVM heap sizes to at least 50% of system RAM
+      - "DISABLE_INSTALL_DEMO_CONFIG=true" # Prevents execution of bundled demo script which installs demo certificates and security configurations to OpenSearch
+    volumes:
+      - opensearch-data3:/usr/share/opensearch/data
+      - ./opensearch/certs/root-ca.pem:/usr/share/opensearch/config/root-ca.pem
+      - ./opensearch/certs/admin.pem:/usr/share/opensearch/config/admin.pem
+      - ./opensearch/certs/admin.key:/usr/share/opensearch/config/admin.key
+      - ./opensearch/certs/node3.pem:/usr/share/opensearch/config/node.pem
+      - ./opensearch/certs/node3.key:/usr/share/opensearch/config/node.key
+#      - ./opensearch/certs/cacerts:/usr/share/opensearch/jdk/lib/security/cacerts
+      - ./opensearch/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+    networks:
+      - opensearch-net # All of the containers will join the same Docker bridge network
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.0
+    container_name: opensearch-dashboards
+    ports:
+      - 5601:5601
+    expose:
+      - "5601"
+    environment:
+      - 'OPENSEARCH_HOSTS=["https://opensearch-node1:9200","https://opensearch-node2:9200","https://opensearch-node3:9200"]'
+      #- "SERVER_BASEPATH=/user/${JUPYTERHUB_USER}/proxy/5601"
+    networks:
+      - opensearch-net
+    volumes:
+      - ./dashboards/opensearch_dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+
+
+  opensearch-rnode1:
+    image: opensearchproject/opensearch:2.8.0
+    container_name: opensearch-rnode1
+    environment:
+      - cluster.name=opensearch-rcluster 
+      - node.name=opensearch-rnode1 
+      - network.host=0.0.0.0
+      - http.port=9201
+      - discovery.seed_hosts=opensearch-rnode1 
+      - cluster.initial_cluster_manager_nodes=opensearch-rnode1
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true" 
+    ports:
+      - 9201:9201
+    expose:
+      - "9201"
+    volumes:
+      - opensearch-rdata1:/usr/share/opensearch/data
+      - ./opensearch/certs/root-ca.pem:/usr/share/opensearch/config/root-ca.pem
+      - ./opensearch/certs/admin.pem:/usr/share/opensearch/config/admin.pem
+      - ./opensearch/certs/admin.key:/usr/share/opensearch/config/admin.key
+      - ./opensearch/certs/rnode1.pem:/usr/share/opensearch/config/node.pem
+      - ./opensearch/certs/rnode1.key:/usr/share/opensearch/config/node.key
+#      - ./opensearch/certs/cacerts:/usr/share/opensearch/jdk/lib/security/cacerts
+      - ./opensearch/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+    networks:
+      - opensearch-net
+  opensearch-rdashboards:
+    image: opensearchproject/opensearch-dashboards:2.8.0
+    container_name: opensearch-rdashboards
+    ports:
+      - 5602:5602
+    expose:
+      - "5602"
+    environment:
+      - 'OPENSEARCH_HOSTS=["https://opensearch-rnode1:9201"]'
+      - 'SERVER_PORT=5602'
+     #- "SERVER_BASEPATH=/user/${JUPYTERHUB_USER}/proxy/5602"
+    networks:
+      - opensearch-net
+    
+    volumes:
+      - ./dashboards/opensearch_dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+
+  opensearch-rnode2:
+    image: opensearchproject/opensearch:2.3.0
+    container_name: opensearch-rnode2
+    environment:
+      - cluster.name=opensearch-rcluster2 
+      - node.name=opensearch-rnode2
+      - network.host=0.0.0.0
+      - http.port=9202
+      - discovery.seed_hosts=opensearch-rnode12
+      - cluster.initial_cluster_manager_nodes=opensearch-rnode2
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true" 
+    ports:
+      - 9202:9202
+    expose:
+      - "9201"
+    volumes:
+      - opensearch-rdata2:/usr/share/opensearch/data
+      - ./opensearch/certs/root-ca.pem:/usr/share/opensearch/config/root-ca.pem
+      - ./opensearch/certs/admin.pem:/usr/share/opensearch/config/admin.pem
+      - ./opensearch/certs/admin.key:/usr/share/opensearch/config/admin.key
+      - ./opensearch/certs/rnode2.pem:/usr/share/opensearch/config/node.pem
+      - ./opensearch/certs/rnode2.key:/usr/share/opensearch/config/node.key
+#      - ./opensearch/certs/cacerts:/usr/share/opensearch/jdk/lib/security/cacerts
+      - ./opensearch/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+    networks:
+      - opensearch-net
+  opensearch-rdashboards2:
+    image: opensearchproject/opensearch-dashboards:2.3.0
+    container_name: opensearch-rdashboards2
+    ports:
+      - 5603:5603
+    expose:
+      - "5603"
+    environment:
+      - 'OPENSEARCH_HOSTS=["https://opensearch-rnode2:9202"]'
+      - 'SERVER_PORT=5603'
+      #- "SERVER_BASEPATH=/user/${JUPYTERHUB_USER}/proxy/5603"
+    networks:
+      - opensearch-net
+    
+    volumes:
+      - ./dashboards/opensearch_dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+
+  # opensearch-elastalert:
+  #   image: jertel/elastalert2:2.10.1
+  #   container_name: opensearch-elastalert
+  #   volumes:
+  #     - ./elastalert/elastalert.yml:/opt/elastalert/config.yaml
+  #     - ./elastalert/rules:/opt/elastalert/rules
+  #   networks:
+  #     - opensearch-net
+
+volumes:
+  opensearch-data1:
+  opensearch-data2:
+  opensearch-data3:
+  opensearch-rdata1:
+  opensearch-rdata2:
+
+networks:
+  opensearch-net:
